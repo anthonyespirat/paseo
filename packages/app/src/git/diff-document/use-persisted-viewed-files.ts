@@ -10,6 +10,7 @@ import {
 import { readValidatedJson } from "@/storage/validated-storage";
 import { useFetchQuery } from "@/data/query";
 import {
+  compactViewedFileRevisions,
   restoreViewedFiles,
   updateViewedFileRevisions,
   viewedFileRevision,
@@ -34,10 +35,11 @@ export function usePersistedViewedFiles({ storageKey, files }: UsePersistedViewe
     networkMode: "always",
     queryFn: async () => {
       if (storageKey === null) return EMPTY_REVISIONS;
-      return (
-        (await readValidatedJson(AsyncStorage, storageKey, ViewedFileRevisionsSchema)) ??
-        EMPTY_REVISIONS
-      );
+      const saved = await readValidatedJson(AsyncStorage, storageKey, ViewedFileRevisionsSchema);
+      if (saved === null) return EMPTY_REVISIONS;
+      const compact = compactViewedFileRevisions(saved);
+      if (compact !== saved) await AsyncStorage.setItem(storageKey, JSON.stringify(compact));
+      return compact;
     },
   } satisfies UseQueryOptions<ViewedFileRevisions>;
   const query = useFetchQuery({

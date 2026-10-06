@@ -78,6 +78,8 @@ export default defineConfig({
       "@tanstack/react-query",
       "@testing-library/react",
       "@react-native-async-storage/async-storage/lib/module/AsyncStorage",
+      "buffer",
+      "fast-sha256",
       "react/jsx-runtime",
       "react/jsx-dev-runtime",
       "react-native-gesture-handler > hoist-non-react-statics",
