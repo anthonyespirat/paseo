@@ -967,6 +967,8 @@ export const ru: TranslationResources = {
         modifiedFile: "Файл изменён",
         markAsViewed: "Отметить как просмотренное",
         viewed: "Просмотрено",
+        viewedStateFailed:
+          "Не удалось сохранить или загрузить просмотренные файлы. Повторите попытку.",
         commits: {
           title: "Коммиты",
           countLabel: "Коммитов в рабочем пространстве: {{count}}",

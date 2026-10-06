@@ -974,6 +974,7 @@ export const fr: TranslationResources = {
         modifiedFile: "Modifié",
         markAsViewed: "Marquer comme vu",
         viewed: "Vu",
+        viewedStateFailed: "Impossible d’enregistrer ou de charger les fichiers vus. Réessayez.",
         commits: {
           title: "Commits",
           countLabel: "{{count}} commits de l’espace de travail",

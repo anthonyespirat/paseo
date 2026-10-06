@@ -942,6 +942,7 @@ export const zhCN: TranslationResources = {
         modifiedFile: "已修改",
         markAsViewed: "标记为已查看",
         viewed: "已查看",
+        viewedStateFailed: "无法保存或加载已查看的文件。请重试。",
         commits: {
           title: "提交",
           countLabel: "{{count}} 个工作区提交",

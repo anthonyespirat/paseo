@@ -6,6 +6,8 @@ import type { DiffDocumentProps } from "./types";
 interface DocumentFileHeaderProps {
   file: DiffFileSection;
   isViewed: boolean;
+  viewedActionDisabled: boolean;
+  viewedActionPending: boolean;
   selectedPath: string | null;
   mode: DiffDocumentProps["mode"];
   onToggleFile: (path: string) => void;
@@ -18,6 +20,8 @@ interface DocumentFileHeaderProps {
 export const DocumentFileHeader = memo(function DocumentFileHeader({
   file,
   isViewed,
+  viewedActionDisabled,
+  viewedActionPending,
   selectedPath,
   mode,
   onToggleFile,
@@ -44,6 +48,8 @@ export const DocumentFileHeader = memo(function DocumentFileHeader({
       file={file.file}
       bodyVisible={!file.isCollapsed}
       isViewed={isViewed}
+      viewedActionDisabled={viewedActionDisabled}
+      viewedActionPending={viewedActionPending}
       isSelected={selectedPath === file.path}
       interactive={mode.kind === "working"}
       workspaceFileDragScope={working?.workspaceFileDragScope}
@@ -98,6 +104,8 @@ function documentFileHeaderIdentityMatches(
     previous.file.fileIndex !== next.file.fileIndex ||
     previous.file.isCollapsed !== next.file.isCollapsed ||
     previous.isViewed !== next.isViewed ||
+    previous.viewedActionDisabled !== next.viewedActionDisabled ||
+    previous.viewedActionPending !== next.viewedActionPending ||
     (previous.selectedPath === previous.file.path) !== (next.selectedPath === next.file.path) ||
     previous.onToggleFile !== next.onToggleFile ||
     previous.onToggleFileViewed !== next.onToggleFileViewed ||
