@@ -972,6 +972,8 @@ export const fr: TranslationResources = {
         newFile: "Nouveau",
         deletedFile: "Supprimé",
         modifiedFile: "Modifié",
+        markAsViewed: "Marquer comme vu",
+        viewed: "Vu",
         commits: {
           title: "Commits",
           countLabel: "{{count}} commits de l’espace de travail",

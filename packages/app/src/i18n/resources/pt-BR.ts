@@ -971,6 +971,8 @@ export const ptBR: TranslationResources = {
         newFile: "Novo",
         deletedFile: "Excluído",
         modifiedFile: "Modificado",
+        markAsViewed: "Marcar como visto",
+        viewed: "Visto",
         commits: {
           title: "Commits",
           countLabel: "{{count}} commits do espaço de trabalho",

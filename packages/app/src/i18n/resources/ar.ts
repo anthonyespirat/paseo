@@ -948,6 +948,8 @@ export const ar: TranslationResources = {
         newFile: "جديد",
         deletedFile: "تم الحذف",
         modifiedFile: "معدّل",
+        markAsViewed: "وضع علامة تمت المشاهدة",
+        viewed: "تمت المشاهدة",
         commits: {
           title: "الإيداعات",
           countLabel: "{{count}} من إيداعات مساحة العمل",
