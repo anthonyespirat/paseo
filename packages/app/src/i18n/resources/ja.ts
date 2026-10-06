@@ -965,6 +965,8 @@ export const ja: TranslationResources = {
         newFile: "新規",
         deletedFile: "削除済み",
         modifiedFile: "変更済み",
+        markAsViewed: "確認済みにする",
+        viewed: "確認済み",
         commits: {
           title: "コミット",
           countLabel: "ワークスペースのコミット数: {{count}}",

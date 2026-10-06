@@ -1552,6 +1552,7 @@ export function ChangesSurface({
     reviewActions,
     reviewAttachment,
     reviewFeedback,
+    viewedFilesStorageKey,
   } = useWorkingDiff({
     presentation,
     serverId,
@@ -1699,6 +1700,7 @@ export function ChangesSurface({
   const workingMode = useMemo(
     () => ({
       kind: "working" as const,
+      viewedFilesStorageKey,
       reviewActions,
       focusPath: documentFocusRequest?.path,
       focusRequestId: documentFocusRequest?.revision,
@@ -1716,6 +1718,7 @@ export function ChangesSurface({
     }),
     [
       reviewActions,
+      viewedFilesStorageKey,
       documentFocusRequest?.path,
       documentFocusRequest?.revision,
       serverId,

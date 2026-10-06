@@ -969,6 +969,8 @@ export const ru: TranslationResources = {
         newFile: "Новый",
         deletedFile: "Файл удалён",
         modifiedFile: "Файл изменён",
+        markAsViewed: "Отметить как просмотренное",
+        viewed: "Просмотрено",
         commits: {
           title: "Коммиты",
           countLabel: "Коммитов в рабочем пространстве: {{count}}",

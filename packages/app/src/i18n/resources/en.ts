@@ -960,6 +960,8 @@ export const en = {
         newFile: "New",
         deletedFile: "Deleted",
         modifiedFile: "Modified",
+        markAsViewed: "Mark as viewed",
+        viewed: "Viewed",
         commits: {
           title: "Commits",
           countLabel: "{{count}} workspace commits",

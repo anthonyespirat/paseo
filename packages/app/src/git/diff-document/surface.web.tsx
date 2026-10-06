@@ -827,9 +827,11 @@ export function DiffSurface(props: DiffSurfaceProps) {
             <WebFileHeaderSection key={file.path} file={file}>
               <DocumentFileHeader
                 file={file}
+                isViewed={props.viewedFiles.get(file.path) === file.file}
                 selectedPath={props.selectedPath}
                 mode={props.mode}
                 onToggleFile={props.onToggleFile}
+                onToggleFileViewed={props.onToggleFileViewed}
                 onSelectPath={props.onSelectPath}
                 canvasRendered
               />
