@@ -43,6 +43,8 @@ export interface FileHeaderProps {
   bodyVisible: boolean;
   showsBodyState?: boolean;
   isViewed?: boolean;
+  viewedActionDisabled?: boolean;
+  viewedActionPending?: boolean;
   isSelected?: boolean;
   depth?: number;
   showDir?: boolean;
@@ -197,6 +199,8 @@ function FileHeaderContent({
   showsBodyState,
   isHovered,
   isViewed,
+  viewedActionDisabled,
+  viewedActionPending,
   onToggleViewed,
   testID,
 }: {
@@ -206,6 +210,8 @@ function FileHeaderContent({
   showsBodyState: boolean;
   isHovered: boolean;
   isViewed: boolean;
+  viewedActionDisabled: boolean;
+  viewedActionPending: boolean;
   onToggleViewed?: () => void;
   testID?: string;
 }): ReactElement {
@@ -226,8 +232,10 @@ function FileHeaderContent({
   const stopMarkAsViewedPropagation = useCallback((event: GestureResponderEvent) => {
     event.stopPropagation();
   }, []);
-  const showViewedAction = isViewed || isHovered || isNative || isCompact;
-  const isViewedActionIdle = isViewed && !isHovered && !isNative && !isCompact;
+  const alwaysShowViewedAction = isNative || isCompact;
+  const showViewedAction = isViewed || viewedActionPending || isHovered || alwaysShowViewedAction;
+  const isViewedActionIdle = isViewed && !isHovered && !alwaysShowViewedAction;
+  const viewedAccessibilityState = useMemo(() => ({ selected: isViewed }), [isViewed]);
   return (
     <View
       style={[styles.content, showsBodyState && styles.documentContent]}
@@ -266,6 +274,9 @@ function FileHeaderContent({
               testID={testID ? `${testID}-mark-as-viewed` : undefined}
               onPress={handleToggleViewed}
               onPressIn={stopMarkAsViewedPropagation}
+              disabled={viewedActionDisabled}
+              loading={viewedActionPending}
+              accessibilityState={viewedAccessibilityState}
               textStyle={styles.viewedActionText}
             >
               {markAsViewedLabel}
@@ -289,6 +300,8 @@ export const FileHeader = memo(function FileHeader({
   bodyVisible,
   showsBodyState = true,
   isViewed = false,
+  viewedActionDisabled = false,
+  viewedActionPending = false,
   isSelected = false,
   depth = 0,
   showDir = true,
@@ -358,6 +371,8 @@ export const FileHeader = memo(function FileHeader({
       showsBodyState={showsBodyState}
       isHovered={hover.isHovered}
       isViewed={isViewed}
+      viewedActionDisabled={viewedActionDisabled}
+      viewedActionPending={viewedActionPending}
       onToggleViewed={onToggleViewed}
       testID={testID}
     />

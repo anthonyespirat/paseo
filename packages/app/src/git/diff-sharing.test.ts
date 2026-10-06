@@ -1,11 +1,6 @@
 import type { ParsedDiffFile } from "@getpaseo/protocol/messages";
 import { describe, expect, it } from "vitest";
 import { retainDiffFiles, shareCheckoutDiff, shareCommitFileDiff } from "./diff-sharing";
-import {
-  changedViewedFilePaths,
-  restoreViewedFiles,
-  serializeViewedFiles,
-} from "./diff-document/viewed-files";
 
 const file: ParsedDiffFile = {
   path: "a.ts",
@@ -122,25 +117,6 @@ describe("diff sharing", () => {
     const next = structuredClone(file);
     change(next.hunks[0]!.lines[0]!.tokens![0]!);
     expect(retainDiffFiles([file], [next])[0]).toBe(next);
-  });
-  it("keeps a viewed revision only while the file is unchanged", () => {
-    const viewed = retainDiffFiles([file], [structuredClone(file)])[0]!;
-    const changed = structuredClone(file);
-    changed.hunks[0]!.lines[0]!.content = "const changed";
-
-    expect(retainDiffFiles([viewed], [structuredClone(viewed)])[0]).toBe(viewed);
-    expect(retainDiffFiles([viewed], [changed])[0]).not.toBe(viewed);
-    expect(changedViewedFilePaths(new Map([[viewed.path, viewed]]), [viewed])).toEqual([]);
-    expect(changedViewedFilePaths(new Map([[viewed.path, viewed]]), [changed])).toEqual([
-      viewed.path,
-    ]);
-    const restored = restoreViewedFiles(serializeViewedFiles(new Map([[viewed.path, viewed]])), [
-      changed,
-    ]);
-    expect(restored).toEqual(new Map());
-    expect(
-      restoreViewedFiles(serializeViewedFiles(new Map([[viewed.path, viewed]])), [viewed]),
-    ).toEqual(new Map([[viewed.path, viewed]]));
   });
   it("retains moved files and removes missing files", () => {
     const second = { ...file, path: "b.ts" };

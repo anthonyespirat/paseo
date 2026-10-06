@@ -228,6 +228,8 @@ export type DiffSurfaceProps = DiffDocumentProps & {
   collapsedFilePaths: ReadonlySet<string>;
   onToggleFile: (path: string) => void;
   viewedFiles: ReadonlyMap<string, ParsedDiffFile>;
+  viewedActionDisabled: boolean;
+  viewedFilePendingPath: string | null;
   onToggleFileViewed: (file: ParsedDiffFile) => void;
   selectedPath: string | null;
   onSelectPath: (path: string) => void;

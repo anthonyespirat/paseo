@@ -1,53 +1,108 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useMemo } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { ParsedDiffFile } from "@getpaseo/protocol/messages";
-import { z } from "zod";
+import {
+  useIsMutating,
+  useMutation,
+  useQueryClient,
+  type UseQueryOptions,
+} from "@tanstack/react-query";
 import { readValidatedJson } from "@/storage/validated-storage";
-import { restoreViewedFiles, serializeViewedFiles } from "./viewed-files";
+import { useFetchQuery } from "@/data/query";
+import {
+  restoreViewedFiles,
+  updateViewedFileRevisions,
+  viewedFileRevision,
+  ViewedFileRevisionsSchema,
+  type ViewedFileRevisions,
+  type ViewedFileUpdate,
+} from "./viewed-files";
 
-const ViewedFileRevisionsSchema = z.record(z.string(), z.string());
+const EMPTY_REVISIONS: ViewedFileRevisions = {};
 
-export function usePersistedViewedFiles(
-  storageKey: string | null,
-  files: readonly ParsedDiffFile[],
-) {
-  const [viewedFiles, setViewedFiles] = useState<Map<string, ParsedDiffFile>>(() => new Map());
-  const [loadedStorageKey, setLoadedStorageKey] = useState<string | null>(null);
-  const filesRef = useRef(files);
-  filesRef.current = files;
+interface UsePersistedViewedFilesOptions {
+  storageKey: string | null;
+  files: readonly ParsedDiffFile[];
+}
 
-  useEffect(() => {
-    if (!storageKey) {
-      setViewedFiles(new Map());
-      setLoadedStorageKey(null);
-      return;
-    }
-    let cancelled = false;
-    setLoadedStorageKey(null);
-    void readValidatedJson(AsyncStorage, storageKey, ViewedFileRevisionsSchema)
-      .then((revisions) => {
-        if (cancelled) return undefined;
-        setViewedFiles(restoreViewedFiles(revisions ?? {}, filesRef.current));
-        setLoadedStorageKey(storageKey);
-        return undefined;
-      })
-      .catch(() => {
-        if (cancelled) return undefined;
-        setViewedFiles(new Map());
-        setLoadedStorageKey(storageKey);
-        return undefined;
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [storageKey]);
+export function usePersistedViewedFiles({ storageKey, files }: UsePersistedViewedFilesOptions) {
+  const queryClient = useQueryClient();
+  const queryKey = useMemo(() => ["working-diff-viewed-files", storageKey], [storageKey]);
+  const options = {
+    queryKey,
+    enabled: storageKey !== null,
+    networkMode: "always",
+    queryFn: async () => {
+      if (storageKey === null) return EMPTY_REVISIONS;
+      return (
+        (await readValidatedJson(AsyncStorage, storageKey, ViewedFileRevisionsSchema)) ??
+        EMPTY_REVISIONS
+      );
+    },
+  } satisfies UseQueryOptions<ViewedFileRevisions>;
+  const query = useFetchQuery({
+    ...options,
+    dataShape: "value",
+    immutableWhen: () => true,
+  });
+  const mutation = useMutation({
+    mutationKey: queryKey,
+    networkMode: "always",
+    scope: { id: storageKey ?? "commit-viewed-files" },
+    mutationFn: async (update: ViewedFileUpdate) => {
+      if (storageKey === null) return EMPTY_REVISIONS;
+      const current = await queryClient.ensureQueryData(options);
+      const next = updateViewedFileRevisions(current, update);
+      await AsyncStorage.setItem(storageKey, JSON.stringify(next));
+      queryClient.setQueryData(queryKey, next);
+      return next;
+    },
+  });
+  const isSaving = useIsMutating({ mutationKey: queryKey }) > 0;
+  const revisions = query.data ?? EMPTY_REVISIONS;
+  const viewedFiles = useMemo(() => restoreViewedFiles(revisions, files), [revisions, files]);
+  const changedPaths = useMemo(
+    () => Object.keys(revisions).filter((path) => !viewedFiles.has(path)),
+    [revisions, viewedFiles],
+  );
+  const { mutate, reset } = mutation;
+  const toggleFileViewed = useCallback(
+    (file: ParsedDiffFile, onSuccess: (isViewed: boolean) => void) => {
+      mutate(
+        { kind: "toggle", file },
+        { onSuccess: (next) => onSuccess(next[file.path] === viewedFileRevision(file)) },
+      );
+    },
+    [mutate],
+  );
+  const invalidateViewedFiles = useCallback(
+    (paths: readonly string[]) => {
+      const invalidPaths = new Set(paths);
+      const invalidEntries = Object.entries(revisions).filter(([path]) => invalidPaths.has(path));
+      const invalidRevisions = Object.fromEntries(invalidEntries);
+      mutate({ kind: "invalidate", revisions: invalidRevisions });
+    },
+    [mutate, revisions],
+  );
+  function retry() {
+    if (query.isError) void query.refetch();
+    reset();
+  }
+  const pendingFilePath =
+    mutation.isPending && mutation.variables.kind === "toggle"
+      ? mutation.variables.file.path
+      : null;
 
-  useEffect(() => {
-    if (loadedStorageKey !== storageKey || !storageKey) return;
-    void AsyncStorage.setItem(storageKey, JSON.stringify(serializeViewedFiles(viewedFiles))).catch(
-      () => {},
-    );
-  }, [loadedStorageKey, storageKey, viewedFiles]);
-
-  return [viewedFiles, setViewedFiles] as const;
+  return {
+    viewedFiles,
+    changedPaths,
+    isLoading: storageKey !== null && query.isPending,
+    isSaving,
+    pendingFilePath,
+    error: query.error ?? mutation.error,
+    isLoadError: query.isError,
+    toggleFileViewed,
+    invalidateViewedFiles,
+    retry,
+  };
 }

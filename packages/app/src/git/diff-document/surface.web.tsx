@@ -828,6 +828,8 @@ export function DiffSurface(props: DiffSurfaceProps) {
               <DocumentFileHeader
                 file={file}
                 isViewed={props.viewedFiles.get(file.path) === file.file}
+                viewedActionDisabled={props.viewedActionDisabled}
+                viewedActionPending={props.viewedFilePendingPath === file.path}
                 selectedPath={props.selectedPath}
                 mode={props.mode}
                 onToggleFile={props.onToggleFile}
