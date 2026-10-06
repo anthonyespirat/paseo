@@ -1,4 +1,6 @@
 import type { ParsedDiffFile } from "@getpaseo/protocol/messages";
+import { Buffer } from "buffer";
+import { hash } from "fast-sha256";
 import { z } from "zod";
 
 export const ViewedFileRevisionsSchema = z.record(z.string(), z.string());
@@ -7,6 +9,16 @@ export type ViewedFileRevisions = z.infer<typeof ViewedFileRevisionsSchema>;
 export type ViewedFileUpdate =
   | { kind: "toggle"; file: ParsedDiffFile }
   | { kind: "invalidate"; revisions: ViewedFileRevisions };
+
+export function compactViewedFileRevisions(revisions: ViewedFileRevisions): ViewedFileRevisions {
+  const legacyEntries = Object.entries(revisions).filter(
+    ([, revision]) => !/^[a-f0-9]{64}$/.test(revision),
+  );
+  if (legacyEntries.length === 0) return revisions;
+  const next = { ...revisions };
+  for (const [path, revision] of legacyEntries) next[path] = hashRevision(revision);
+  return next;
+}
 
 export function updateViewedFileRevisions(
   revisions: ViewedFileRevisions,
@@ -26,7 +38,13 @@ export function updateViewedFileRevisions(
 }
 
 export function viewedFileRevision(file: ParsedDiffFile): string {
-  return JSON.stringify(file);
+  return hashRevision(JSON.stringify(file));
+}
+
+function hashRevision(revision: string): string {
+  const bytes = Buffer.from(revision, "utf8");
+  const digest = hash(bytes);
+  return Buffer.from(digest).toString("hex");
 }
 
 export function restoreViewedFiles(

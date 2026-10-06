@@ -142,6 +142,26 @@ describe("viewed files in a working diff", () => {
       .toHaveAttribute("aria-selected", "true");
   });
 
+  it("compacts a legacy record before marking another file", async () => {
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ [file.path]: JSON.stringify(file) }));
+    const view = mountReview({ storageKey: STORAGE_KEY, files: [file] });
+    const action = page.getByTestId("diff-file-0-mark-as-viewed");
+    await expect.element(action).toBeEnabled();
+    await expect.element(action).toHaveAttribute("aria-selected", "true");
+    await expect
+      .poll(() => AsyncStorage.getItem(STORAGE_KEY))
+      .toBe(JSON.stringify({ [file.path]: viewedFileRevision(file) }));
+
+    const other = { ...file, path: "src/b.ts" };
+    view.rerenderReview({ storageKey: STORAGE_KEY, files: [other, file] });
+    await action.click();
+    await expect.element(action).toHaveAttribute("aria-selected", "true");
+    expect(JSON.parse((await AsyncStorage.getItem(STORAGE_KEY)) ?? "null")).toEqual({
+      [file.path]: viewedFileRevision(file),
+      [other.path]: viewedFileRevision(other),
+    });
+  });
+
   it("invalidates a viewed file when its content changes", async () => {
     const view = mountReview({ storageKey: STORAGE_KEY, files: [file] });
     const action = page.getByTestId("diff-file-0-mark-as-viewed");
