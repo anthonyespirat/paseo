@@ -277,6 +277,7 @@ function FileHeaderContent({
               disabled={viewedActionDisabled}
               loading={viewedActionPending}
               accessibilityState={viewedAccessibilityState}
+              aria-selected={isViewed}
               textStyle={styles.viewedActionText}
             >
               {markAsViewedLabel}

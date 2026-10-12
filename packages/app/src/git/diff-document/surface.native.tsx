@@ -254,6 +254,7 @@ export function DiffSurface(props: DiffSurfaceProps) {
       scrollTop.value = file.top;
       scrollRef.current?.scrollTo({ y: file.top, animated: false });
       consumedFocusRef.current = requestKey;
+      mode.onFocusRequestConsumed?.();
     }
   }, [collapsedFilePaths, mode, model.files, onToggleFile, scrollTop]);
   const contentInsetBottom = props.contentInsetBottom ?? 0;

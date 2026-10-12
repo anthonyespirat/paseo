@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { ParsedDiffFile } from "@getpaseo/protocol/messages";
 import {
@@ -28,6 +28,7 @@ interface UsePersistedViewedFilesOptions {
 
 export function usePersistedViewedFiles({ storageKey, files }: UsePersistedViewedFilesOptions) {
   const queryClient = useQueryClient();
+  const [dismissedError, setDismissedError] = useState<Error | null>(null);
   const queryKey = useMemo(() => ["working-diff-viewed-files", storageKey], [storageKey]);
   const options = {
     queryKey,
@@ -67,7 +68,7 @@ export function usePersistedViewedFiles({ storageKey, files }: UsePersistedViewe
     () => Object.keys(revisions).filter((path) => !viewedFiles.has(path)),
     [revisions, viewedFiles],
   );
-  const { mutate, reset } = mutation;
+  const { mutate } = mutation;
   const toggleFileViewed = useCallback(
     (file: ParsedDiffFile, onSuccess: (isViewed: boolean) => void) => {
       mutate(
@@ -88,7 +89,7 @@ export function usePersistedViewedFiles({ storageKey, files }: UsePersistedViewe
   );
   function retry() {
     if (query.isError) void query.refetch();
-    reset();
+    setDismissedError(mutation.error);
   }
   const pendingFilePath =
     mutation.isPending && mutation.variables.kind === "toggle"
@@ -101,8 +102,9 @@ export function usePersistedViewedFiles({ storageKey, files }: UsePersistedViewe
     isLoading: storageKey !== null && query.isPending,
     isSaving,
     pendingFilePath,
-    error: query.error ?? mutation.error,
+    error: query.error ?? (mutation.error === dismissedError ? null : mutation.error),
     isLoadError: query.isError,
+    invalidationFailed: mutation.isError && mutation.variables.kind === "invalidate",
     toggleFileViewed,
     invalidateViewedFiles,
     retry,

@@ -483,6 +483,7 @@ export function DiffSurface(props: DiffSurfaceProps) {
     if (file && scrollRef.current) {
       scrollRef.current.scrollTop = file.top;
       consumedFocusRef.current = requestKey;
+      mode.onFocusRequestConsumed?.();
     }
   }, [collapsedFilePaths, mode, model.files, onToggleFile]);
 

@@ -37,6 +37,7 @@ function ThemedDiffDocument(props: ThemedDiffDocumentProps) {
     pendingFilePath,
     error,
     isLoadError,
+    invalidationFailed,
     toggleFileViewed: persistFileViewed,
     invalidateViewedFiles,
     retry,
@@ -46,6 +47,7 @@ function ThemedDiffDocument(props: ThemedDiffDocumentProps) {
   collapseStateRef.current = collapseState;
   const paths = collapseState?.paths ?? EMPTY_PATHS;
   const collapsedFilePaths = useMemo(() => new Set(paths), [paths]);
+  const previousViewedFilesRef = useRef(viewedFiles);
   const toggleFile = useCallback(
     (path: string) => {
       if (!collapseState) return;
@@ -57,27 +59,30 @@ function ThemedDiffDocument(props: ThemedDiffDocumentProps) {
     [collapseState, collapsedFilePaths, paths],
   );
   useEffect(() => {
-    if (
-      !collapseState ||
-      !canToggleViewed ||
-      error ||
-      props.files.length === 0 ||
-      changedPaths.length === 0
-    )
-      return;
-    // Keep persisted review revisions and the owning panel's collapse state in sync with new diffs.
-    const invalidPaths = new Set(changedPaths);
+    if (props.files.length === 0) return;
+    const previouslyViewedFiles = previousViewedFilesRef.current;
+    previousViewedFilesRef.current = viewedFiles;
+    if (!collapseState) return;
+    // Restored stale marks must not expand paths collapsed in another comparison.
+    const invalidPaths = new Set(
+      changedPaths.filter(
+        (path) => previouslyViewedFiles.has(path) && collapseState.canAutoExpand(path),
+      ),
+    );
     const next = paths.filter((path) => !invalidPaths.has(path));
     if (next.length !== paths.length) collapseState.onChange(next);
+    if (!canToggleViewed || error || invalidationFailed || changedPaths.length === 0) return;
     invalidateViewedFiles(changedPaths);
   }, [
     canToggleViewed,
     changedPaths,
     collapseState,
     error,
+    invalidationFailed,
     invalidateViewedFiles,
     paths,
     props.files.length,
+    viewedFiles,
   ]);
   const toggleFileViewed = useCallback(
     (file: ParsedDiffFile) => {

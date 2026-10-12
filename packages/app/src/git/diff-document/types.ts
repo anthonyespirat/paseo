@@ -21,6 +21,7 @@ export interface WorkingDiffMode {
   onFilePress?: (path: string) => void;
   focusPath?: string;
   focusRequestId?: number;
+  onFocusRequestConsumed?: () => void;
   workspaceFileDragScope?: { serverId: string; workspaceId: string };
   onOpenFile?: (path: string) => void;
   onOpenToSide?: (path: string) => void;
@@ -41,6 +42,7 @@ export type DiffDocumentProps = DiffDocumentBaseProps &
         collapseState: {
           paths: readonly string[];
           onChange: (paths: string[]) => void;
+          canAutoExpand: (path: string) => boolean;
         };
       }
     | { mode: { kind: "commit" }; collapseState?: never }
