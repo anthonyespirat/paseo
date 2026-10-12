@@ -32,6 +32,28 @@ async function savedViewedFiles(page: Page) {
   }, STORAGE_PREFIX);
 }
 
+for (const viewed of [true, false]) {
+  test(`closing and reopening the diff preserves ${viewed ? "viewed" : "manually collapsed"} files`, async ({
+    page,
+    withWorkspace,
+  }) => {
+    const { panel, header, action } = await openWorkingDiff(page, withWorkspace);
+    await (viewed ? action : header).click();
+    await expect(header).toHaveAttribute("aria-expanded", "false");
+    const tab = page.getByTestId("workspace-tab-working_diff").filter({ visible: true }).first();
+    await tab.click({ button: "right" });
+    await page.getByTestId("workspace-tab-context-working_diff-close").click();
+    await expect(panel).toHaveCount(0);
+    await page.reload();
+    await page.getByTestId("workspace-new-tab-button").filter({ visible: true }).first().click();
+    await page.getByTestId("workspace-new-tab-menu-diff").filter({ visible: true }).click();
+    await expect(panel).toBeVisible();
+    await header.hover();
+    await expect(action).toHaveAttribute("aria-selected", String(viewed));
+    await expect(header).toHaveAttribute("aria-expanded", "false");
+  });
+}
+
 test("marking and unmarking a file preserves viewed and collapse state after reload", async ({
   page,
   withWorkspace,
